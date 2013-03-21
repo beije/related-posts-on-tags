@@ -10,9 +10,16 @@ Author URI: http://www.benjaminhorn.se
 
 include( 'class.relatedPostsOnTags.plugin.php' );
 function rpot_search_on_tags() {
+	
+	// Should really clean up the data validation.
+	if( !isset( $_REQUEST['tags'] ) ) {
+		echo 'false';
+		exit;
+	}
+
 	$rpot = new relatedPostsOnTags();
 	$tags = (Array) json_decode( stripslashes_deep( $_REQUEST['tags'] ) );
-	
+
 	echo json_encode( $rpot->search( $tags ) );
 	exit;
 }

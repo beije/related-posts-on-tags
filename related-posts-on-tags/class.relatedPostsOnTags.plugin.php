@@ -5,7 +5,8 @@ class relatedPostsOnTags {
 	}
 	
 	private function getTag( $tagName ) {
-		return get_tags( array('name__like' => $tagName, 'order' => 'ASC') );
+		$tag = get_tags( array('name__like' => $tagName, 'order' => 'ASC') );
+		return $tag; 
 	}
 
 	private function tagToId( $tagObject ) {
@@ -66,8 +67,13 @@ class relatedPostsOnTags {
 
 		while ( $query->have_posts() ) {
 			$query->the_post();
+			
+			$tags = get_the_tags();
+			if( !$tags ) {
+				continue;
+			}
 
-			$posttags = array_map( array( $this, 'tagToId' ), get_the_tags() );
+			$posttags = array_map( array( $this, 'tagToId' ), $tags );
 			
 			$w = count( array_intersect($posttags, $tagids) );
 			$postids[] = get_the_ID();
