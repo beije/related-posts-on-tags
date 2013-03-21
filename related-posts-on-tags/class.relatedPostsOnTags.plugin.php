@@ -1,11 +1,48 @@
 <?php
 class relatedPostsOnTags {
+
+	private $limit = 5;
+	private $categories = array();
+
 	function __construct() {
 		
 	}
 	
+	static function hasJsonErrored() {
+		switch (json_last_error()) {
+			case JSON_ERROR_NONE:
+				return false;
+			break;
+			case JSON_ERROR_DEPTH:
+				return 'Maximum stack depth exceeded';
+			break;
+			case JSON_ERROR_STATE_MISMATCH:
+				return 'Underflow or the modes mismatch';
+			break;
+			case JSON_ERROR_CTRL_CHAR:
+				return 'Unexpected control character found';
+			break;
+			case JSON_ERROR_SYNTAX:
+				return 'Syntax error, malformed JSON';
+			break;
+			case JSON_ERROR_UTF8:
+				return 'Malformed UTF-8 characters, possibly incorrectly encoded';
+			break;
+			default:
+				return 'Unknown error';
+			break;
+		}
+
+	}
+
 	private function getTag( $tagName ) {
-		$tag = get_tags( array('name__like' => $tagName, 'order' => 'ASC') );
+		$tag = get_tags( 
+			array(
+				'name__like' => $tagName, 
+				'order' => 'ASC'
+			) 
+		);
+
 		return $tag; 
 	}
 
@@ -13,7 +50,15 @@ class relatedPostsOnTags {
 		return $tagObject->term_id;
 	}
 
-	public function search( $tags, $includeContent = false ) {
+	private function catSlugToId( $catslug ) {
+		$cat = get_category_by_slug( $catslug );
+		return $cat->term_id;
+	}
+
+	public function search( $tags, $limit = 5, $categories = array(), $includeContent = false ) {
+		$this->limit = $limit;
+		$this->categories = $categories;
+
 		$matches = $this->fetchPosts( $tags );
 		$posts = array();
 
@@ -62,7 +107,20 @@ class relatedPostsOnTags {
 		$posts = array();
 		$postids = array();
 		$weights = array();
-		$query = new WP_Query( array( 'tag__in' => $tagids ) );
+		$args = array();
+		
+		$args['tag__in'] = $tagids;
+
+		// This is very expensive performance wise,
+		// but it's the only way to look through all
+		// posts without resorting to a real query :()
+		$args['posts_per_page'] = -1;
+		
+		if( count($this->categories) > 0 ) {
+			$args['cat__in'] = array_map( array($this, 'catSlugToId'), $this->categories );
+		}
+		$query = new WP_Query( $args );
+
 		$c = 0;
 
 		while ( $query->have_posts() ) {
@@ -89,7 +147,9 @@ class relatedPostsOnTags {
 
 		wp_reset_postdata();
 		
-		return $posts;
+		// Because we aren't able to use posts_per_page limitor
+		// we have to limit the return data
+		return array_splice( $posts, 0 , $this->limit );
 	}
 
 	public function debug( $obj ) {

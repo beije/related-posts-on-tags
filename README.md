@@ -8,8 +8,39 @@ Returns a list of posts that matches with tags that you've sent in through ajax,
 The Ajax url is available under:
 http://www.example.dev/wp-admin/admin-ajax.php?action=search_on_tags&tags=["JSON","ARRAY",";)"]
 
+
+Here's a ajax request made with jquery:
+
+```javascript
+    var url = "http://www.example.dev/wp-admin/admin-ajax.php";
+    var getVars = { 
+        action: "search_on_tags", 
+        tags: JSON.stringify( [
+            'tag 1',
+            'tag 2',
+            'tag 3'
+        ] ),
+        limit: 5,
+        cats: JSON.stringify( [
+            'category-slug-1',  
+            'category-slug-2'
+        ] )
+    }
+    
+    $.get(  
+        url,  
+        getVars,  
+        function( response ){
+            console.log( response );  
+        },  
+        "json"  
+    );  
+```
+
+
 You receive this as response:
 
+```javascript
 // Response map
 [{
     date: "YYYY-MM-DD HH:MM:SS",    // String, Publish date
@@ -29,3 +60,4 @@ You receive this as response:
     url: "http://",                 // String, Permalink
     weight: 2                       // Int, Number of tag matches
 }]
+```
