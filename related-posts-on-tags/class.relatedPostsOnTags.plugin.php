@@ -55,7 +55,7 @@ class relatedPostsOnTags {
 		return $cat->term_id;
 	}
 
-	public function search( $tags, $limit = 5, $categories = array(), $includeContent = false ) {
+	public function search( $tags, $limit = 5, $categories = array(), $includeContent = false, $randomize = true ) {
 		$this->limit = $limit;
 		$this->categories = $categories;
 
@@ -89,9 +89,19 @@ class relatedPostsOnTags {
 			$p['weight'] = $match['weight'];
 
 			$posts[] = (Object) $p;
-		}	
+		}
 
-		return $posts;
+		// Randomize same weight items
+		if( $randomize ) {
+			// Randomize everything
+			shuffle( $posts );
+			// Sort the randomized array according to weight.
+			usort($posts, function( $a, $b ){ return $a->weight < $b->weight; } );
+		}
+
+		// Because we aren't able to use posts_per_page limitor
+		// we have to limit the return data
+		return array_splice( $posts, 0 , $this->limit );
 	}
 
 	private function fetchPosts( $tags ) {
@@ -147,9 +157,7 @@ class relatedPostsOnTags {
 
 		wp_reset_postdata();
 		
-		// Because we aren't able to use posts_per_page limitor
-		// we have to limit the return data
-		return array_splice( $posts, 0 , $this->limit );
+		return $posts;
 	}
 
 	public function debug( $obj ) {
