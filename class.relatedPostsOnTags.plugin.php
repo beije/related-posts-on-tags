@@ -3,6 +3,7 @@ class relatedPostsOnTags {
 
 	private $limit = 5;
 	private $categories = array();
+	private $posttype = 'post';
 
 	function __construct() {
 		
@@ -55,9 +56,10 @@ class relatedPostsOnTags {
 		return $cat->term_id;
 	}
 
-	public function search( $tags, $limit = 5, $categories = array(), $includeContent = false, $randomize = true ) {
+	public function search( $tags, $limit = 5, $categories = array(), $includeContent = false, $randomize = true, $posttype = 'post' ) {
 		$this->limit = $limit;
 		$this->categories = $categories;
+		$this->posttype = $posttype;
 
 		$matches = $this->fetchPosts( $tags );
 		$posts = array();
@@ -129,6 +131,10 @@ class relatedPostsOnTags {
 		if( count($this->categories) > 0 ) {
 			$args['cat__in'] = array_map( array($this, 'catSlugToId'), $this->categories );
 		}
+
+		// Add post type criteria
+		$args['post_type'] = $this->posttype;
+
 		$query = new WP_Query( $args );
 
 		$c = 0;
